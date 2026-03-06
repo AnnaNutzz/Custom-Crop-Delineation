@@ -60,7 +60,7 @@ This downloads:
 1. Sentinel-2 imagery (4-band: RGB + NIR) from Microsoft Planetary Computer
 2. Saves them locally by region
 
-**Note:** Previously this also downloaded OpenStreetMap farmland data, but OSM coverage for agriculture in India is practically zero.
+**Note:** Previously this also downloaded OpenStreetMap farmland data, but OSM coverage for agriculture in India is practically zero. You MUST run Step 4 to generate training masks if using this method.
 
 **Custom area:**
 
@@ -87,7 +87,23 @@ This will:
 3. Cut everything into 256×256 patches
 4. Merge all regions into `data/combined/train` and `val`
 
-> **Note:** If you want to use a massive pre-labeled European dataset instead, run `python download_ai4b.py` (requires `pip install netCDF4 git+https://github.com/waldnerf/ai4boundaries`).
+> **Note:** If you are using `download_ai4b.py` (Step 3.5), you DO NOT need to run this step.
+
+---
+
+## Step 4.5: AI4Boundaries Dataset (Recommended)
+
+Instead of relying on synthetic NDVI masks (Steps 3 & 4), it is highly recommended to use the massive pre-labeled AI4Boundaries European dataset for robust training.
+
+```bash
+# Requires netCDF4
+pip install netCDF4
+
+# Download full training set (22GB) and convert to our format
+python download_ai4b.py --split train
+```
+
+This will automatically format images and binary extent masks into `data/combined/train` and `data/combined/val`, making it ready for `train.py`.
 
 ---
 
@@ -142,6 +158,21 @@ python predict.py --model checkpoints/best_model.pth --input image.tif --thresho
 
 ---
 
+## Step 7: End-to-End Visual Demo
+
+Once the model is trained, use `small_area_demo.py` to test it on a fresh 5x5 km area. This script downloads fresh Sentinel-2 imagery on the fly, passes it through the model, and builds a comprehensive publication-ready report evaluating its performance.
+
+```bash
+python small_area_demo.py
+```
+
+Outputs in the `small_area_results/` directory:
+
+- `report_results.png` - 6-panel technical breakdown including NDVI and Probability mapping.
+- `field_overlay.png` - Clean RGB + mask overlay for easy sharing.
+
+---
+
 ## Troubleshooting
 
 | Issue                 | Solution                                                                        |
@@ -160,15 +191,13 @@ python predict.py --model checkpoints/best_model.pth --input image.tif --thresho
 # Test everything works
 python train.py --dry_run
 
-# Download imagery
-python download_data.py --regions all --steps download_sentinel
-
-# Generate masks & tiles
-python generate_masks.py
-
-# Train
+# Recommended Train Flow: Download AI4Boundaries & Train
+python download_ai4b.py --split train
 python train.py --data_dir data/combined --epochs 50
 
-# Predict
+# Demo the Evaluation Results
+python small_area_demo.py
+
+# Predict Custom Images
 python predict.py --model checkpoints/best_model.pth --input <image_or_folder>
 ```

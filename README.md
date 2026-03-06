@@ -6,12 +6,13 @@ Detect agricultural fields in Sentinel-2 satellite imagery using deep learning �
 
 End-to-end pipeline for binary crop field segmentation:
 
-1. **Data Acquisition** — Sentinel-2 imagery (Planetary Computer)
-2. **Mask Generation** — Unsupervised field boundaries via NDVI thresholding and morphological operations
+1. **Data Acquisition** — Sentinel-2 imagery (Planetary Computer) or AI4Boundaries dataset
+2. **Mask Generation** — Pre-labeled data via `download_ai4b.py` or unsupervised boundaries via NDVI thresholding
 3. **Preprocessing** — Tile imagery and masks into 256×256 patches
 4. **Training** — U-Net with EfficientNet-B0 encoder, 4-band input (RGB + NIR)
 5. **Prediction** — Field mask generation with sliding window for full satellite images
-6. **Evaluation** — IoU, Dice, Precision, Recall + NDVI visualizations
+6. **Demo** — End-to-end small area evaluation with visualization (`small_area_demo.py`)
+7. **Evaluation** — IoU, Dice, Precision, Recall + NDVI visualizations
 
 ## Architecture
 
@@ -21,15 +22,15 @@ Sentinel-2 RGB+NIR (10m) ───► NDVI Thresholding ──► Synthetic Mask
 Sentinel-2 RGB+NIR (10m) ───────────────────────────────────────────┘
 ```
 
-| Component   | Choice                   | Why                                          |
-| ----------- | ------------------------ | -------------------------------------------- |
-| Imagery     | Sentinel-2 L2A (RGB+NIR) | Free, 10m resolution, NIR detects vegetation |
-| Labels      | Synthetic (NDVI > 0.3)   | OSM farmland data is too sparse in India     |
-| Model       | U-Net                    | Proven for segmentation                      |
-| Encoder     | EfficientNet-B0          | Fast, works on CPU                           |
-| Loss        | Dice + BCE               | Handles field/non-field class imbalance      |
-| Framework   | PyTorch + smp            | Industry standard                            |
-| Data Source | Planetary Computer       | Free STAC API, no account needed             |
+| Component   | Choice                    | Why                                          |
+| ----------- | ------------------------- | -------------------------------------------- |
+| Imagery     | Sentinel-2 L2A (RGB+NIR)  | Free, 10m resolution, NIR detects vegetation |
+| Labels      | AI4Boundaries / Synthetic | High quality EU dataset or NDVI Thresholding |
+| Model       | U-Net                     | Proven for segmentation                      |
+| Encoder     | EfficientNet-B0           | Fast, works on CPU                           |
+| Loss        | Dice + BCE                | Handles field/non-field class imbalance      |
+| Framework   | PyTorch + smp             | Industry standard                            |
+| Data Source | JRC FTP / Planetary Comp  | Public datasets with API access              |
 
 ## Quick Start
 
@@ -40,30 +41,29 @@ python -m venv venv
 # source venv/bin/activate       # Linux/Mac
 pip install -r requirements.txt
 
-# 2. Download imagery for Indian agricultural regions
-python download_data.py --regions all --steps download_sentinel
+# 2. Download training data
+# Option A: AI4Boundaries (Recommended - high quality European dataset)
+python download_ai4b.py --split train
 
-# 3. Generate field masks & format data
+# Option B: Synthetic Indian Regions (Requires generate_masks.py afterwards)
+python download_data.py --regions all --steps download_sentinel
 python generate_masks.py
 
-# 4. Train (EfficientNet-B0 default, 4-band RGB+NIR)
+# 3. Train (EfficientNet-B0 default, 4-band RGB+NIR)
 python train.py --data_dir data/combined --epochs 50
 
-# Train with RGB only (3 bands)
-python train.py --data_dir data/combined --in_channels 3 --epochs 50
+# 4. End-to-End Evaluation (Visual Demo)
+python small_area_demo.py
 
-# 5. Predict field masks
+# 5. Predict field masks on custom imagery
 python predict.py --model checkpoints/best_model.pth --input data/punjab/sentinel2_rgbnir.tif
-
-# Quick test (no data needed)
-python train.py --dry_run
 ```
 
 ## Dataset Note
 
-Originally, this pipeline was designed to use OpenStreetMap (OSM) `landuse=farmland` polygons as training labels. However, OSM farmland coverage in India is practically zero.
-Instead, we now generate unsupervised training masks using NDVI thresholding and morphological operations (`generate_masks.py`).
-Alternatively, you can download a pre-labeled European dataset (AI4Boundaries) using `download_ai4b.py`.
+The recommended training path is to use the massive pre-labeled European **AI4Boundaries dataset** through `download_ai4b.py`. This provides high-quality labels for model training and automatically converts them to our format.
+
+Alternatively, if studying Indian agriculture specifically, OSM farmland coverage is practically zero. We instead generate unsupervised training masks using NDVI thresholding and morphological operations (`generate_masks.py`) run over imagery collected via `download_data.py`.
 
 ## Project Structure
 
@@ -73,11 +73,12 @@ crop-delineation/
 ├── HOW_TO_RUN.md                   # Detailed step-by-step guide
 ├── requirements.txt                # Python dependencies
 │
-├── download_data.py                # Step 1: Multi-region imagery download
-├── generate_masks.py               # Step 2: Unsupervised mask generation
-├── train.py                        # Step 3: U-Net training
+├── download_data.py                # Step 1B: Multi-region imagery download
+├── generate_masks.py               # Step 1B: Unsupervised mask generation
+├── download_ai4b.py                # Step 1A: Download AI4Boundaries dataset
+├── train.py                        # Step 2: U-Net training
+├── small_area_demo.py              # Step 3: End-to-end evaluation & visual report
 ├── predict.py                      # Step 4: Field mask predictions
-├── download_ai4b.py                # Optional: Download AI4Boundaries dataset
 │
 ├── data/                           # Downloaded + processed data
 │   ├── punjab/                     # Per-region data
