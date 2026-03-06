@@ -1,0 +1,30 @@
+# Virtual environment
+venv/
+.venv/
+
+# Data (too large for git)
+data/
+
+# Model checkpoints
+checkpoints/
+
+# Predictions
+predictions/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
