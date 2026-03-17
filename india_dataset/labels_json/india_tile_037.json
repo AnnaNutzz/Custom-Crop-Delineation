@@ -1,0 +1,62 @@
+{
+  "version": "5.11.4",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "f1",
+      "points": [
+        [
+          196.5294117647059,
+          200.94117647058823
+        ],
+        [
+          199.20559114735005,
+          255.0
+        ],
+        [
+          240.05882352941177,
+          255.0
+        ],
+        [
+          240.05882352941177,
+          192.11764705882354
+        ],
+        [
+          214.76470588235298,
+          192.11764705882354
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "f1",
+      "points": [
+        [
+          196.5294117647059,
+          238.0
+        ],
+        [
+          196.08204334365325,
+          255.0
+        ],
+        [
+          128.29411764705884,
+          255.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "..\\images\\india_tile_037.jpg",
+  "imageData": null,
+  "imageHeight": 256,
+  "imageWidth": 256
+}
